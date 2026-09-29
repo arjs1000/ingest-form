@@ -1,0 +1,29 @@
+node_modules/
+dist/
+.turbo/
+.wrangler/
+coverage/
+*.tsbuildinfo
+.DS_Store
+*.log
+.vscode/
+.idea/
+
+# Env: only the example is committed
+.env
+.env.*
+!.env.example
+.dev.vars
+
+# Python (OCR sidecar)
+.venv/
+__pycache__/
+
+# Generated
+apps/api/src/generated/
+apps/web/src/routeTree.gen.ts
+
+# Git worktrees (create-feature / create-hotfix flow)
+.claude/worktrees/
+.playwright-mcp/
+.claude/settings.local.json

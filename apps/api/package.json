@@ -1,0 +1,44 @@
+{
+  "name": "@ingest-form/api",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "imports": {
+    "#prisma": {
+      "workerd": "./src/generated/prisma-worker/client.ts",
+      "default": "./src/generated/prisma/client.ts"
+    }
+  },
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "dev:worker": "wrangler dev",
+    "build": "wrangler deploy --dry-run --outdir dist",
+    "deploy:worker": "wrangler deploy",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "generate": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:studio": "prisma studio --port 8302"
+  },
+  "dependencies": {
+    "@hono/node-server": "^2.1.1",
+    "@hono/zod-validator": "^0.9.1",
+    "@ingest-form/shared": "workspace:*",
+    "@prisma/adapter-neon": "~7.10.0",
+    "@prisma/adapter-pg": "~7.10.0",
+    "@prisma/client": "~7.10.0",
+    "hono": "^4.13.9",
+    "libphonenumber-js": "^1.13.14",
+    "unpdf": "^1.8.1",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@types/node": "^22.19.0",
+    "prisma": "~7.10.0",
+    "tsx": "^4.23.15",
+    "typescript": "~6.0.3",
+    "vitest": "^5.0.2",
+    "wrangler": "^4.141.0"
+  }
+}

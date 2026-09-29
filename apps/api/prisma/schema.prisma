@@ -1,0 +1,178 @@
+// Connection URL lives in prisma.config.ts, not in the datasource block (Prisma 7).
+// Enum values are lowercase to match the shared Zod constants in packages/shared/src/ingest/.
+
+// Two clients from one schema: Node (dev server, tests, scripts) and workerd (Cloudflare Worker).
+// Each runtime loads its own through the "#prisma" import condition in package.json.
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+  runtime  = "nodejs"
+}
+
+generator workerClient {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma-worker"
+  runtime  = "workerd"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum SubmissionSource {
+  api
+  ui
+}
+
+enum SubmissionStatus {
+  received
+  processing
+  completed
+  failed
+}
+
+enum StepName {
+  validate
+  normalise
+  geocode
+  transform
+  persist
+  notify
+}
+
+enum StepRunStatus {
+  success
+  warning
+  error
+  skipped
+}
+
+/// Why a submission was flagged as a duplicate of an earlier one (see duplicates/duplicate-rules.ts).
+enum DuplicateReason {
+  same_reference
+  same_person_email
+  same_person_mobile
+}
+
+enum Gender {
+  male
+  female
+  prefer_not_to_say @map("prefer-not-to-say")
+}
+
+/// A third-party supplier that sends forms to POST /api/v1/ingest.
+model IngestProvider {
+  id          String             @id @default(uuid())
+  name        String             @unique
+  createdAt   DateTime           @default(now())
+  keys        IngestApiKey[]
+  submissions IngestSubmission[]
+}
+
+/// Only the SHA-256 hash of a key is stored. The full key is shown once, on creation.
+model IngestApiKey {
+  id          String             @id @default(uuid())
+  providerId  String
+  provider    IngestProvider     @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  label       String?
+  prefix      String
+  keyHash     String             @unique
+  createdAt   DateTime           @default(now())
+  expiresAt   DateTime
+  lastUsedAt  DateTime?
+  revokedAt   DateTime?
+  submissions IngestSubmission[]
+
+  @@index([providerId])
+}
+
+/// One POST to the ingest endpoint (or one UI flow submission). rawBody is kept exactly as received.
+model IngestSubmission {
+  id                   String             @id @default(uuid())
+  source               SubmissionSource
+  providerId           String?
+  provider             IngestProvider?    @relation(fields: [providerId], references: [id], onDelete: SetNull)
+  apiKeyId             String?
+  apiKey               IngestApiKey?      @relation(fields: [apiKeyId], references: [id], onDelete: SetNull)
+  status               SubmissionStatus   @default(received)
+  lastStep             StepName?
+  failedStep           StepName?
+  rawBody              String
+  applicationReference String?
+  sessionId            String?
+  /// Earliest earlier submission this one duplicates. SetNull: deleting that record just unlinks this one.
+  duplicateOfId        String?
+  duplicateOf          IngestSubmission?  @relation("SubmissionDuplicates", fields: [duplicateOfId], references: [id], onDelete: SetNull)
+  duplicates           IngestSubmission[] @relation("SubmissionDuplicates")
+  duplicateReason      DuplicateReason?
+  attempts             Int                @default(1)
+  receivedAt           DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+  steps                IngestStepRun[]
+  application          Application?
+
+  @@index([applicationReference])
+  @@index([status, failedStep])
+  @@index([receivedAt])
+  @@index([duplicateOfId])
+}
+
+/// One execution of one pipeline step. Re-runs add rows with a higher attempt number.
+model IngestStepRun {
+  id           String           @id @default(uuid())
+  submissionId String
+  submission   IngestSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  step         StepName
+  attempt      Int
+  status       StepRunStatus
+  output       Json?
+  issues       Json
+  durationMs   Int
+  startedAt    DateTime         @default(now())
+
+  @@index([submissionId, step])
+}
+
+/// The transformed record (TransformedFormSchema). One per submission.
+model Application {
+  id                   String           @id @default(uuid())
+  submissionId         String           @unique
+  submission           IngestSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  sessionId            String
+  applicationReference String
+  firstName            String
+  lastName             String
+  email                String
+  gender               Gender
+  dateOfBirth          DateTime         @db.Date
+  phoneNumber          String?
+  mobileNumber         String
+  addressLine1         String
+  addressLine2         String
+  addressLine3         String?
+  postcode             String
+  country              String
+  longitude            Float
+  latitude             Float
+  createdAt            DateTime         @default(now())
+  updatedAt            DateTime         @updatedAt
+
+  @@index([applicationReference])
+  @@index([lastName, firstName])
+}
+
+/// Admin → General upload settings. One row (id "default"), created on the first save; defaults apply until then.
+model IntakeSettings {
+  id            String   @id @default("default")
+  acceptPhotos  Boolean
+  maxFileSizeMb Int
+  updatedAt     DateTime @updatedAt
+}
+
+/// Admin → General notification addresses (FEAT-003). One row (id "default"), created on the first save.
+model NotificationSettings {
+  id           String   @id @default("default")
+  successEmail String?
+  failureEmail String?
+  updatedAt    DateTime @updatedAt
+}

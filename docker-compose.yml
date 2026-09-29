@@ -1,0 +1,22 @@
+# Local Postgres for development. Neon is the cloud database.
+# Port comes from DB_PORT in .env (block 8300-8309, see the workspace port registry).
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: ingest-form-db
+    environment:
+      POSTGRES_USER: ingest
+      POSTGRES_PASSWORD: ingest_dev
+      POSTGRES_DB: ingest_form
+    ports:
+      - "${DB_PORT:-8303}:5432"
+    volumes:
+      - ingest-form-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ingest -d ingest_form"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  ingest-form-db:

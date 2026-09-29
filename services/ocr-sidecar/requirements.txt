@@ -1,0 +1,7 @@
+# PaddleOCR sidecar (FEAT-005). Python 3.12. Versions match the 2026-09-29 benchmark.
+# Install: pnpm ocr:setup   (creates services/ocr-sidecar/.venv)
+paddlepaddle==3.3.1
+paddleocr==3.7.0
+pypdfium2>=4.30,<5
+pillow>=11
+numpy>=2

@@ -1,0 +1,335 @@
+@import 'tailwindcss';
+@import '@fontsource-variable/hanken-grotesk';
+
+/*
+ * Design tokens. The single source of colour, type, radius and shadow values.
+ * Rules for using them: .claude/rules/design-patterns.md. No hex values anywhere else.
+ */
+@theme {
+  --font-sans: 'Hanken Grotesk Variable', Arial, Helvetica, sans-serif;
+
+  --color-brand: #005eb8;
+  --color-brand-dark: #003087;
+  --color-brand-bar: #2a77bf;
+  --color-brand-tint: #e8f1f8;
+  --color-action: #007f3b;
+  --color-action-hover: #00662f;
+  --color-action-edge: #00401e;
+  --color-action-tint: #e5f2ea;
+  --color-text: #212b32;
+  --color-text-secondary: #4c6272;
+  --color-border: #d8dde0;
+  --color-border-strong: #aeb7bd;
+  --color-page: #f0f4f5;
+  --color-surface: #ffffff;
+  --color-error: #d5281b;
+  --color-error-edge: #6a140e;
+  --color-error-tint: #fbe9e7;
+  --color-warning: #8a4b00;
+  --color-warning-tint: #fff4e0;
+  --color-focus: #ffeb3b;
+  --color-status-ok: #00d663;
+  --color-link-visited: #330072;
+  --color-link-hover: #7c2855;
+  --color-overlay: rgb(33 43 50 / 0.5);
+
+  --radius-card: 16px;
+  --radius-control: 6px;
+
+  --shadow-card: 0 2px 8px rgb(33 43 50 / 0.08);
+  --shadow-overlay: 0 12px 32px rgb(33 43 50 / 0.2);
+  --shadow-edge-action: 0 4px 0 var(--color-action-edge);
+  --shadow-edge-brand: 0 4px 0 var(--color-brand-dark);
+  --shadow-edge-neutral: 0 4px 0 var(--color-border-strong);
+  --shadow-edge-error: 0 4px 0 var(--color-error-edge);
+
+  --container-page: 960px;
+  --container-admin: 1280px;
+}
+
+/*
+ * Surfaces. Components read these variables, so one I* library renders at two densities:
+ * patient (default, NHS consumer style) and admin (`data-surface="admin"`, dense dashboard style).
+ * Custom properties inherit, so setting them on a layout root re-skins everything inside it.
+ */
+:root,
+[data-surface='patient'] {
+  --body-text: 1rem;
+  --body-leading: 1.5;
+  --h1-size: 2rem;
+  --h2-size: 1.5rem;
+  --h3-size: 1.25rem;
+  --h4-size: 1.125rem;
+  --control-h: 3rem;
+  --control-radius: 6px;
+  --control-text: 1rem;
+  --control-px: 1rem;
+  --control-border-w: 2px;
+  --choice-size: 2.5rem;
+  --card-radius: 16px;
+  --card-pad: 1.5rem;
+  --card-shadow: var(--shadow-card);
+  --button-primary: var(--color-action);
+  --button-primary-hover: var(--color-action-hover);
+  --edge-primary: var(--shadow-edge-action);
+  --edge-secondary: var(--shadow-edge-brand);
+  --edge-neutral: var(--shadow-edge-neutral);
+  --edge-error: var(--shadow-edge-error);
+  --edge-space: 0.25rem;
+  --press-offset: 0.25rem;
+}
+
+@media (min-width: 48rem) {
+  :root,
+  [data-surface='patient'] {
+    --body-text: 1.1875rem;
+    --body-leading: 1.47;
+    --h1-size: 3rem;
+    --h2-size: 2rem;
+    --h3-size: 1.5rem;
+    --h4-size: 1.1875rem;
+    --control-text: 1.1875rem;
+    --card-pad: 2rem;
+  }
+}
+
+[data-surface='admin'] {
+  --body-text: 0.875rem;
+  --body-leading: 1.43;
+  --h1-size: 1.5rem;
+  --h2-size: 1.125rem;
+  --h3-size: 1rem;
+  --h4-size: 0.875rem;
+  --control-h: 2.25rem;
+  --control-radius: 8px;
+  --control-text: 0.875rem;
+  --control-px: 0.75rem;
+  --control-border-w: 1px;
+  --choice-size: 1.125rem;
+  --card-radius: 12px;
+  --card-pad: 1rem;
+  --card-shadow: 0 1px 2px rgb(33 43 50 / 0.06);
+  --button-primary: var(--color-brand);
+  --button-primary-hover: var(--color-brand-dark);
+  --edge-primary: 0 1px 2px rgb(33 43 50 / 0.12);
+  --edge-secondary: 0 1px 2px rgb(33 43 50 / 0.08);
+  --edge-neutral: 0 1px 2px rgb(33 43 50 / 0.08);
+  --edge-error: 0 1px 2px rgb(33 43 50 / 0.12);
+  --edge-space: 0;
+  --press-offset: 0;
+}
+
+@media (min-width: 48rem) {
+  [data-surface='admin'] {
+    --h1-size: 1.875rem;
+    --h2-size: 1.25rem;
+    --card-pad: 1.25rem;
+  }
+}
+
+/* NHS focus style: yellow fill ring with a dark inner edge. Applied to every interactive element, on both surfaces. */
+@utility focus-ring {
+  outline: 4px solid var(--color-focus);
+  outline-offset: 0;
+  box-shadow: inset 0 0 0 2px var(--color-text);
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: var(--color-page);
+    color: var(--color-text);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body,
+  [data-surface] {
+    font-size: var(--body-text);
+    line-height: var(--body-leading);
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-weight: 600;
+    text-wrap: balance;
+  }
+  h1 {
+    font-size: var(--h1-size);
+    line-height: 1.18;
+  }
+  h2 {
+    font-size: var(--h2-size);
+    line-height: 1.22;
+  }
+  h3 {
+    font-size: var(--h3-size);
+    line-height: 1.28;
+  }
+  h4 {
+    font-size: var(--h4-size);
+    line-height: 1.35;
+  }
+
+  a {
+    color: var(--color-brand);
+    text-decoration: underline;
+    text-underline-offset: 0.15em;
+  }
+  a:visited {
+    color: var(--color-link-visited);
+  }
+  a:hover {
+    color: var(--color-link-hover);
+    text-decoration-thickness: 3px;
+  }
+
+  :focus-visible {
+    @apply focus-ring;
+  }
+  a:focus-visible {
+    background-color: var(--color-focus);
+    color: var(--color-text);
+    box-shadow: 0 -2px var(--color-focus), 0 4px var(--color-text);
+    outline: none;
+    text-decoration: none;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      transition-duration: 0.01ms !important;
+      animation-duration: 0.01ms !important;
+    }
+  }
+}
+
+/*
+ * Third-party widgets, restyled to the tokens. Each is wrapped by one I* component
+ * (IFileUpload, IPhoneInput, IDateInput); features never touch these class names.
+ * Unlayered on purpose: it must beat the libraries' own (unlayered) stylesheets.
+ */
+
+/* FilePond (IFileUpload): white card, dashed strong border, brand "choose a file" link. */
+.IFileUpload .filepond--root {
+  margin-bottom: 0;
+  font-family: var(--font-sans);
+  font-size: var(--control-text);
+}
+.IFileUpload .filepond--panel-root {
+  background-color: var(--color-surface);
+  border: 2px dashed var(--color-border-strong);
+  border-radius: var(--card-radius);
+}
+.IFileUpload .filepond--drop-label {
+  min-height: 7rem;
+  color: var(--color-text);
+}
+.IFileUpload .filepond--drop-label label {
+  padding: 1rem;
+  cursor: pointer;
+  font-size: var(--control-text);
+  line-height: 1.4;
+}
+.IFileUpload .filepond--label-action {
+  color: var(--color-brand);
+  font-weight: 600;
+  text-decoration-color: var(--color-brand);
+}
+.IFileUpload .filepond--drop-label label:hover .filepond--label-action {
+  color: var(--color-link-hover);
+}
+.IFileUpload .filepond--root:focus-within .filepond--panel-root {
+  border-color: var(--color-text);
+}
+.IFileUpload .filepond--drop-label label:focus-visible,
+.IFileUpload .filepond--root:has(.filepond--browser:focus-visible) .filepond--drop-label label {
+  outline: 4px solid var(--color-focus);
+  box-shadow: inset 0 0 0 2px var(--color-text);
+}
+.IFileUpload .filepond--root[data-disabled] .filepond--drop-label label {
+  color: var(--color-text-secondary);
+  opacity: 1;
+}
+.IFileUpload .filepond--item-panel {
+  background-color: var(--color-text-secondary);
+  border-radius: var(--control-radius);
+}
+.IFileUpload [data-filepond-item-state='processing-complete'] .filepond--item-panel {
+  background-color: var(--color-action);
+}
+.IFileUpload [data-filepond-item-state*='invalid'] .filepond--item-panel,
+.IFileUpload [data-filepond-item-state*='error'] .filepond--item-panel {
+  background-color: var(--color-error);
+}
+.IFileUpload .filepond--file {
+  color: var(--color-surface);
+  font-size: 1rem;
+}
+.IFileUpload .filepond--file-action-button:focus-visible {
+  outline: 4px solid var(--color-focus);
+  box-shadow: none;
+}
+
+/* react-phone-number-input (IPhoneInput): its country select is our own markup, so only the row gap is set here. */
+.IPhoneInput.PhoneInput {
+  gap: 0.5rem;
+  align-items: stretch;
+}
+
+/* react-day-picker (IDateInput calendar). Days are 44px targets; the selected day is brand blue. */
+.IDateInput-calendar .rdp-root {
+  --rdp-accent-color: var(--color-brand);
+  --rdp-accent-background-color: var(--color-brand-tint);
+  --rdp-today-color: var(--color-brand-dark);
+  --rdp-day-height: 2.75rem;
+  --rdp-day-width: 2.75rem;
+  --rdp-day_button-height: 2.625rem;
+  --rdp-day_button-width: 2.625rem;
+  --rdp-day_button-border-radius: var(--control-radius);
+  --rdp-selected-border: 2px solid var(--color-brand);
+  --rdp-disabled-opacity: 0.4;
+  --rdp-nav_button-height: 2.75rem;
+  --rdp-nav_button-width: 2.75rem;
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  color: var(--color-text);
+}
+.IDateInput-calendar .rdp-selected .rdp-day_button {
+  background-color: var(--color-brand);
+  color: var(--color-surface);
+  font-weight: 600;
+}
+.IDateInput-calendar .rdp-today:not(.rdp-selected) .rdp-day_button {
+  font-weight: 600;
+  text-decoration: underline;
+}
+.IDateInput-calendar .rdp-dropdown_root {
+  border: 1px solid var(--color-text-secondary);
+  border-radius: var(--control-radius);
+  padding: 0.25rem 0.5rem;
+}
+.IDateInput-calendar .rdp-dropdown_root:has(.rdp-dropdown:focus-visible) {
+  outline: 4px solid var(--color-focus);
+  box-shadow: inset 0 0 0 2px var(--color-text);
+}
+.IDateInput-calendar .rdp-dropdown {
+  font-size: 1rem;
+}
+.IDateInput-calendar .rdp-chevron {
+  fill: var(--color-brand);
+}
+.IDateInput-calendar .rdp-day_button:focus-visible,
+.IDateInput-calendar .rdp-button_previous:focus-visible,
+.IDateInput-calendar .rdp-button_next:focus-visible {
+  background-color: var(--color-focus);
+  color: var(--color-text);
+  outline: 4px solid var(--color-focus);
+  box-shadow: inset 0 0 0 2px var(--color-text);
+}

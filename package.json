@@ -1,0 +1,28 @@
+{
+  "name": "ingest-form",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@9.15.9",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "dev": "turbo run dev",
+    "dev:api": "turbo run dev --filter=@ingest-form/api",
+    "dev:web": "turbo run dev --filter=@ingest-form/web",
+    "build": "turbo run build",
+    "test": "turbo run test",
+    "typecheck": "turbo run typecheck",
+    "generate": "turbo run generate",
+    "db:migrate": "pnpm --filter @ingest-form/api db:migrate",
+    "db:studio": "pnpm --filter @ingest-form/api db:studio",
+    "db:up": "docker compose up -d",
+    "db:down": "docker compose down",
+    "ocr:setup": "python3.12 -m venv services/ocr-sidecar/.venv && services/ocr-sidecar/.venv/bin/pip install --quiet -r services/ocr-sidecar/requirements.txt",
+    "ocr:start": "services/ocr-sidecar/.venv/bin/python services/ocr-sidecar/server.py"
+  },
+  "devDependencies": {
+    "turbo": "^2.11.4",
+    "typescript": "~6.0.3"
+  }
+}

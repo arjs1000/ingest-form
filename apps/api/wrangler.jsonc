@@ -1,0 +1,29 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "ingest-form-api",
+  "main": "src/worker.ts",
+  "compatibility_date": "2026-09-01",
+  "compatibility_flags": ["nodejs_compat"],
+  // Local parity check only. Day-to-day dev runs on Node via `pnpm dev` (BE_PORT 8300).
+  "dev": {
+    "port": 8304
+  },
+  // Non-secret config. Secrets (DATABASE_URL, RESEND_API_KEY) go in .dev.vars locally and `wrangler secret put` when deployed.
+  "vars": {
+    "NODE_ENV": "production",
+    "ALLOWED_ORIGINS": "",
+    "POSTCODES_IO_BASE_URL": "https://api.postcodes.io",
+    // Emails (FEAT-003): a sender on a Resend-verified domain, and the admin origin for links. Empty = unset.
+    "RESEND_FROM_EMAIL": "",
+    "ADMIN_BASE_URL": ""
+  },
+  // POST /api/v1/ingest limits. Counted per Cloudflare location and approximate; period must be 10 or 60.
+  // Keep in sync with INGEST_KEY_LIMIT / INGEST_IP_LIMIT in src/features/ingest-api/ingest-api.constants.ts.
+  "ratelimits": [
+    { "name": "INGEST_KEY_LIMITER", "namespace_id": "1001", "simple": { "limit": 60, "period": 60 } },
+    { "name": "INGEST_IP_LIMITER", "namespace_id": "1002", "simple": { "limit": 20, "period": 60 } },
+    // Public patient intake (/api/v1/intake and /extract). Keep in sync with INTAKE_IP_LIMIT in
+    // src/features/intake-api/intake-api.constants.ts.
+    { "name": "INTAKE_IP_LIMITER", "namespace_id": "1003", "simple": { "limit": 10, "period": 60 } }
+  ]
+}
